@@ -38,7 +38,7 @@ export class User {
   @prop()
   passwordResetCode: string | null;
 
-  @prop()
+  @prop({default: false})
   verified: boolean;
 
   async validatePassword(this: DocumentType<User>, candidatePassword: string) {
