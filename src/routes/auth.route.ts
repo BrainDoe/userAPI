@@ -1,29 +1,18 @@
-import { createUserSchema, verifyUserSchema, forgotPasswordSchema, resetPasswordSchema } from './../schema/user.schema';
-import express, { Request, Response } from "express"
+import express from "express";
+import {
+  loginHandler
+} from "../controller/auth.controller";
 import validateResource from "../middleware/validateResouce";
-import { createUserHandler, forgotPasswordHandler, resetPasswordHandler, verifyUserHandler } from '../controller/user.controller';
+import { createSessionSchema } from "../schema/auth.schema";
 
 const router = express.Router();
 
-router.post("/api/v1/auth", validateResource(createUserSchema), createUserHandler)
-
 router.post(
-  "/api/v1/auth/verify/:id/:verificationCode",
-  validateResource(verifyUserSchema),
-  verifyUserHandler
+  "/api/v1/auth/login",
+  validateResource(createSessionSchema),
+  loginHandler
 );
 
-router.post(
-  "/api/v1/auth/forgotpassword",
-  validateResource(forgotPasswordSchema),
-  forgotPasswordHandler
-);
-
-router.post(
-  "/api/v1/auth/resetpassword/:id/:passwordResetCode",
-  validateResource(resetPasswordSchema),
-  resetPasswordHandler
-);
-
+// router.post("/api/v1/auth/refresh", refreshAccessTokenHandler);
 
 export default router;
