@@ -1,13 +1,8 @@
 import { DocumentType } from "@typegoose/typegoose";
 import { Request, Response } from "express";
-import { get } from "lodash";
-import { User } from "../models/User.model";
 import { CreateLoginInput } from "../schema/auth.schema";
-import {
-  findSessionById
-} from "../service/auth.service";
 import { findUserByEmail, findUserById } from "../service/user.service";
-import { signToken, signRefreshT } from "../utils/jwt";
+import { signToken, signRefreshT, verifyJWT, verifyRefreshToken } from "../utils/jwt";
 
 
 export async function loginHandler(req: Request<{}, {}, CreateLoginInput>, res: Response) {
@@ -36,13 +31,14 @@ export async function loginHandler(req: Request<{}, {}, CreateLoginInput>, res: 
     return res.status(400).send(message);
   }
 
+  user.valid = true;
+  await user.save();
+
   // sign a access token
   const accessToken = signToken(user._id, user.email);
 
   // sign a refresh token
   const refreshToken = signRefreshT(user._id, user.email);
-
-  // send the tokens
 
   return res.status(200).send({
     status: 'Success',
@@ -54,40 +50,36 @@ export async function loginHandler(req: Request<{}, {}, CreateLoginInput>, res: 
   });
 }
 
-// export async function refreshAccessTokenHandler(req: Request, res: Response) {
-//   const refreshToken = get(req, "headers.x-refresh");
+export async function refreshAccessTokenHandler(req: Request, res: Response) {
+  // const refreshToken = get(req, "headers.x-refresh");
+  const refreshToken: any = req.headers["x-refresh"];
 
-//   const decoded = verifyJwt<{ session: string }>(
-//     refreshToken,
-//     "refreshTokenPublicKey"
-//   );
+  const decoded = verifyRefreshToken<{ id: string }>(refreshToken);
 
-//   if (!decoded) {
-//     return res.status(401).send({
-//       status: "Failure",
-//       message: "Could not refresh access token"
-//     });
-//   }
+  if(decoded === null) {
+    return res.status(401).send({
+      status: "Failure",
+      message: "Could not refresh access token....."
+    });
+  }
 
-//   const session = await findSessionById(decoded.session);
+  const user = await findUserById(String(decoded.id));
 
-//   if (!session || !session.valid) {
-//     return res.status(401).send({
-//       status: "Failure",
-//       message: "Could not refresh access token"
-//     });
-//   }
+  if(!user || !user.valid) {
+    return res.status(401).send({
+      status: "Failure",
+      message: "Could not refresh access token"
+    });
+  }
 
-//   const user = await findUserById(String(session.user));
-
-//   if (!user) {
-//     return res.status(401).send({
-//       status: "Failure",
-//       message: "Could not refresh access token"
-//     });
-//   }
-
-//   const accessToken = signAccessToken(user);
-
-//   return res.send({ accessToken });
-// }
+  const accessToken = signToken(user._id, user.email)
+  const refresh = signRefreshT(user._id, user.email)
+  
+  return res.status(200).send({
+    status: "Success",
+    data: {
+      accessToken,
+      refreshToken: refresh
+    }
+  });
+}

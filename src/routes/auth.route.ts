@@ -1,7 +1,8 @@
 import express from "express";
 import {
-  loginHandler
+  loginHandler, refreshAccessTokenHandler
 } from "../controller/auth.controller";
+import requireUser from "../middleware/requireUser.middleware";
 import validateResource from "../middleware/validateResouce";
 import { createLoginSchema } from "../schema/auth.schema";
 
@@ -13,6 +14,6 @@ router.post(
   loginHandler
 );
 
-// router.post("/api/v1/auth/refresh", refreshAccessTokenHandler);
+router.post("/api/v1/auth/refresh", requireUser, refreshAccessTokenHandler);
 
 export default router;
