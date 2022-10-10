@@ -2,7 +2,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import { Request, Response } from "express";
 import { get } from "lodash";
 import { User } from "../models/User.model";
-import { CreateSessionInput } from "../schema/auth.schema";
+import { CreateLoginInput } from "../schema/auth.schema";
 import {
   findSessionById
 } from "../service/auth.service";
@@ -10,7 +10,7 @@ import { findUserByEmail, findUserById } from "../service/user.service";
 import { signToken, signRefreshT } from "../utils/jwt";
 
 
-export async function loginHandler(req: Request<{}, {}, CreateSessionInput>, res: Response) {
+export async function loginHandler(req: Request<{}, {}, CreateLoginInput>, res: Response) {
   const message = "Invalid email or password";
   const { email, password } = req.body;
 
