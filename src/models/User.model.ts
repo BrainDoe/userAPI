@@ -52,7 +52,7 @@ export class User {
   verified: boolean;
 
   @prop({default: false})
-  valid: boolean;
+  active: boolean;
 
   async validatePassword(this: DocumentType<User>, candidatePassword: string) {
     try {

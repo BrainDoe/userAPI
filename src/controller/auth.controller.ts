@@ -31,7 +31,7 @@ export async function loginHandler(req: Request<{}, {}, CreateLoginInput>, res: 
     return res.status(400).send(message);
   }
 
-  user.valid = true;
+  user.active = true;
   await user.save();
 
   // sign a access token
@@ -51,7 +51,6 @@ export async function loginHandler(req: Request<{}, {}, CreateLoginInput>, res: 
 }
 
 export async function refreshAccessTokenHandler(req: Request, res: Response) {
-  // const refreshToken = get(req, "headers.x-refresh");
   const refreshToken: any = req.headers["x-refresh"];
 
   const decoded = verifyRefreshToken<{ id: string }>(refreshToken);
@@ -65,10 +64,10 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
 
   const user = await findUserById(String(decoded.id));
 
-  if(!user || !user.valid) {
+  if(!user || !user.active) {
     return res.status(401).send({
       status: "Failure",
-      message: "Could not refresh access token"
+      message: "Could not refresh access token. You will have to login to perform this action"
     });
   }
 
@@ -82,4 +81,16 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
       refreshToken: refresh
     }
   });
+}
+
+export async function logoutHandler(req: Request, res: Response) {
+  const user = await findUserById(res.locals.user._id);
+  user!.active = false;
+  await user?.save();
+  res.locals.user = null;
+
+  return res.status(200).send({
+    status: "success",
+    message: "Logged out successfully",
+  })
 }
